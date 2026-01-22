@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-from .models import Trend
+from .models import Trend,Region
 from .serializers import TrendSerializer
 
 
@@ -20,18 +20,14 @@ def trend_list(request):
 
 
 @api_view(["POST"])
-def create_trend(request):
+def create_region(request):
     api_key = request.headers.get("X-ADMIN-KEY")
 
     if api_key != settings.ADMIN_API_KEY:
-        return Response(
-            {"error": "Unauthorized"},
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+        return Response({"error": "Unauthorized"}, status=401)
 
-    serializer = TrendSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    name = request.data.get("name")
+    slug = request.data.get("slug")
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    region = Region.objects.create(name=name, slug=slug)
+    return Response({"id": region.id, "name": region.name})
